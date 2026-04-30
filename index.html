@@ -1,226 +1,2619 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Courses</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Courses</title>
+    <style>
 
-<style>
-body { margin:0; font-family:-apple-system; background:#f8f3ea; }
-
-.container { padding:16px; }
-
-.header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:16px;
-}
-
-.tabs { display:flex; gap:10px; margin-bottom:16px; }
-
-.tab {
-  flex:1;
-  padding:10px;
-  border-radius:10px;
-  background:#eee;
-  text-align:center;
-  cursor:pointer;
-}
-
-.tab.active { background:#f65f4c; color:white; }
-
-.card {
-  background:white;
-  border-radius:16px;
-  padding:12px;
-  margin-bottom:12px;
-}
-
-.columns {
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap:10px;
-}
-
-.subcol-title {
-  font-size:12px;
-  font-weight:bold;
-  margin-bottom:6px;
-}
-
-.small-grid div {
-  background:#f1f1f1;
-  padding:6px;
-  border-radius:8px;
-  margin-bottom:6px;
-  cursor:pointer;
-}
-
-.selected { background:#f65f4c !important; color:white; }
-
-.grid {
-  display:flex;
-  overflow-x:auto;
-  gap:10px;
-}
-
-.meal {
-  min-width:120px;
-  text-align:center;
-}
-
-.meal img {
-  width:100px;
-  height:70px;
-  object-fit:cover;
-  border-radius:10px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="header">
-  <h1>Courses</h1>
-  <button onclick="alert('Paramètres bientôt')">🗂️</button>
-</div>
-
-<div class="tabs">
-  <div class="tab active">Plats</div>
-  <div class="tab">Rayons</div>
-  <div class="tab">Liste</div>
-</div>
-
-<div class="card">
-<h3>Plats</h3>
-<div class="grid" id="meals"></div>
-</div>
-
-<div class="card">
-<h3>Créer</h3>
-
-<div class="columns">
-
-<div>
-<div class="subcol-title">Légume</div>
-<div id="vegetables" class="small-grid"></div>
-</div>
-
-<div>
-<div class="subcol-title">Accompagnement</div>
-<div id="starches" class="small-grid"></div>
-</div>
-
-<div>
-<div class="subcol-title">Fromage</div>
-<div id="cheeses" class="small-grid"></div>
-</div>
-
-<div>
-<div class="subcol-title">Protéines</div>
-<div id="proteins" class="small-grid"></div>
-</div>
-
-<div>
-<div class="subcol-title">Sauce</div>
-<div id="sauces" class="small-grid"></div>
-</div>
-
-</div>
-
-<div id="summary" style="margin-top:10px;font-size:13px;"></div>
-
-</div>
-
-</div>
-
-<script>
-
-const DATA = {
-  vegetables: ["Courgette","Carotte","Poireau"],
-  starches: ["Riz","Pâtes","Patates"],
-  cheeses: ["Fromage râpé","Mozza"],
-  proteins: ["Poulet","Oeufs","Jambon"],
-  sauces: ["Tomate","Crème"]
-};
-
-const meals = [
-  { name:"Pizza", img:"images/Pizza.WEBP" },
-  { name:"Lasagnes", img:"images/Lasagnes.JPG" },
-  { name:"Couscous", img:"images/Couscous.WEBP" }
-];
-
-const selected = {
-  vegetables:new Set(),
-  starches:new Set(),
-  cheeses:new Set(),
-  proteins:new Set(),
-  sauces:new Set()
-};
-
-function renderList(id, items, key){
-  const container = document.getElementById(id);
-  container.innerHTML = "";
-
-  items.forEach((item,i)=>{
-    const div = document.createElement("div");
-    div.textContent = item;
-
-    div.onclick = ()=>{
-      if(selected[key].has(i)){
-        selected[key].delete(i);
-        div.classList.remove("selected");
-      } else {
-        selected[key].add(i);
-        div.classList.add("selected");
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #f8f3ea;
+        color: #2b2b2b;
+        font-family: Helvetica, Arial, sans-serif;
       }
-      updateSummary();
-    };
+      .page { min-height: 100vh; padding: 16px 16px 120px; }
+      .shell { max-width: 1280px; margin: 0 auto; }
+      .card {
+        background: #fffaf3;
+        border: 1px solid #f1e6d8;
+        border-radius: 28px;
+        box-shadow: 0 10px 28px rgba(73, 42, 24, 0.06);
+      }
+      .hero, .tab-panel, .meal-list, .shopping { padding: 20px; margin-bottom: 16px; }
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.05;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #f65f4c;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 16px 0;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #f8f3ea;
+        padding: 8px 0;
+      }
+      .tab-btn {
+        border: 1px solid #f1e6d8;
+        border-radius: 18px;
+        padding: 11px 8px;
+        background: #fffaf3;
+        color: #6f6256;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 0;
+        white-space: nowrap;
+      }
+      .tab-btn.active {
+        background: #f65f4c;
+        color: #fff7ef;
+        border-color: #f65f4c;
+        box-shadow: 0 8px 18px rgba(246, 95, 76, 0.24);
+      }
+      .count-badge {
+        min-width: 22px;
+        height: 22px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: #fff3e5;
+        color: #ad4f37;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+      }
+      .tab-btn:not(.active) .count-badge {
+        background: #f65f4c;
+        color: #fff8f1;
+      }
+      .section-title {
+        font-size: 19px;
+        font-weight: 700;
+        margin: 0 0 14px;
+        letter-spacing: -0.02em;
+        color: #40352d;
+      }
+      #tab-plats .meal-list .section-title { color: #fff8f1; }
+      .sub-title { font-size: 14px; font-weight: 700; margin: 0 0 12px; }
+      .grid-compact { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+      .grid-compact::-webkit-scrollbar { height: 8px; }
+      .grid-compact::-webkit-scrollbar-thumb { background: rgba(246,95,76,0.22); border-radius: 999px; }
+      .grid-compact #recipesList .item { padding: 7px 7px; }
+      .item { min-width: 132px; max-width: 132px; flex: 0 0 132px; scroll-snap-align: start; }
+      .item {
+        width: 100%;
+        text-align: left;
+        background: #fff;
+        border: 1px solid #f2e7da;
+        border-radius: 18px;
+        padding: 12px;
+        transition: 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      }
+      .item.active { background: #fff2ec; border-color: #f7b3a6; box-shadow: 0 8px 20px rgba(246,95,76,0.12); }
+      .item-row { display: flex; align-items: center; gap: 10px; }
+      #recipesList .item-row { flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+      #recipesList .thumb { width: 70px; height: 70px; border-radius: 20px; background: transparent; display: inline-flex; align-items: center; justify-content: center; font-size: 34px; flex: 0 0 70px; }
+      #recipesList .item-name { font-size: 13px; line-height: 1.25; text-align: center; }
+      #recipesList .chips { justify-content: center; }
+      .thumb {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        background: #fff1df;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex: 0 0 30px;
+      }
+      .item-name { font-size: 14px; font-weight: 700; line-height: 1.35; color: #3c322b; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+      .chip {
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        background: #fff3e5;
+        color: #8b5a42;
+        font-weight: 700;
+      }
+      .columns-3 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+      .subcol {
+        background: #fff7ef;
+        border: 1px solid #f1e6d8;
+        border-radius: 22px;
+        padding: 12px;
+      }
+      .subcol-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: #a18775;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+      .small-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+      .small-item {
+        width: 100%;
+        text-align: left;
+        background: #fff;
+        border: 1px solid #f1e6d8;
+        border-radius: 16px;
+        padding: 10px 12px;
+        min-height: 58px;
+      }
+      .small-item.active {
+        border-color: #f7b3a6;
+        background: #fff1eb;
+      }
+      .selected-summary {
+        margin-top: 12px;
+        border-radius: 20px;
+        background: #fff3e5;
+        padding: 14px;
+        font-size: 14px;
+        color: #6f6256;
+        line-height: 1.6;
+      }
+      .btn {
+        width: 100%;
+        border: 0;
+        border-radius: 18px;
+        padding: 14px 16px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+      .btn-primary {
+        background: #f65f4c;
+        color: #fff8f1;
+        box-shadow: 0 10px 22px rgba(246,95,76,0.25);
+      }
+      .btn-secondary {
+        background: #fffaf3;
+        color: #b1a194;
+        border: 1px solid #f1e6d8;
+      }
+      .btn-secondary.is-active {
+        background: #f65f4c;
+        color: #fff8f1;
+        border-color: #f65f4c;
+      }
+      .sticky-cta { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 30; }
+      .sticky-cta .inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        background: rgba(248,243,234,0.92);
+        backdrop-filter: blur(10px);
+        padding-top: 8px;
+      }
+      .meal-entry {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        background: #fff;
+        border-radius: 20px;
+        padding: 14px;
+        border: 1px solid #f1e6d8;
+      }
+      .meal-entry + .meal-entry { margin-top: 10px; }
+      .meal-entry-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+      .meal-entry-meta { margin-top: 6px; font-size: 12px; color: #6b7280; }
+      .remove-btn { background: transparent; border: 0; color: #7a6a5d; cursor: pointer; font: inherit; padding: 0; font-weight: 700; }
+      .store-card { border-radius: 20px; padding: 14px; color: #111; box-shadow: 0 10px 24px rgba(0,0,0,0.05); }
+      .store-card + .store-card { margin-top: 12px; }
+      .store-title { margin-bottom: 12px; font-size: 14px; font-weight: 700; }
+      .zone-group + .zone-group { margin-top: 12px; }
+      .zone-title { margin-bottom: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: #fff; font-weight: 700; }
+      .shopping-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 16px;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: #111;
+      }
+      .shopping-item + .shopping-item { margin-top: 8px; }
+      .shopping-name { display: flex; align-items: center; gap: 10px; }
+      .qty-input {
+        width: auto;
+        min-width: 50px;
+        max-width: 50px;
+        flex: 0 0 50px;
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font: inherit;
+        background: #fffaf3;
+        color: #111;
+      }
+      .qty-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
+      .delete-ingredient-btn {
+        display:inline-flex; align-items:center; justify-content:center; width: 22px; min-width: 22px; flex: 0 0 22px;
+        border: 0; background: transparent; color: #111; font-size: 18px; line-height: 1; cursor: pointer; padding: 0;
+      }
+      .pdf-wrap { margin-top: 16px; display: grid; gap: 10px; }
+      .empty { color: #6b7280; font-size: 14px; line-height: 1.6; }
+      .hidden { display: none; }
+      .spacer { height: 1px; }
+      @media (max-width: 980px) { .columns-3 { grid-template-columns: 1fr; } }
+      #recipesList .item.active {
+        background: #ffe9e1 !important;
+        border: 2px solid #f65f4c !important;
+        transform: scale(1.03) !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12) !important;
+        position: relative;
+      }
+      #recipesList .item.active .item-name {
+        color: #3c322b !important;
+      }
+      #recipesList .item.active .chip {
+        background: #fff3e5 !important;
+        color: #8b5a42 !important;
+        border: none;
+      }
+      #recipesList .item.active::after {
+        content: "✓";
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: #f65f4c;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      }
+@media (max-width: 640px) {
+        .grid-compact { display: flex; }
+        .small-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .shopping-item { grid-template-columns: 1fr auto; }
+        .qty-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
+        .qty-input { width: auto; min-width: 50px; max-width: 50px; flex: 0 0 50px; }
+        .delete-ingredient-btn { width: 22px; min-width: 22px; flex: 0 0 22px; }
+        .tab-btn { font-size: 11px; padding: 10px 4px; gap: 4px; }
+        .count-badge { min-width: 18px; height: 18px; padding: 0 5px; font-size: 10px; }
+      }
+      @media print {
+        body { background: #fff; }
+        .tabs, .sticky-cta, #generatePdfBtn, #clearAllBtn, .remove-btn, #tab-plats, #tab-liste, .qty-input, .delete-ingredient-btn { display: none !important; }
+        #tab-courses { display: block !important; }
+        .page { padding: 0; }
+        .card, .store-card, .shopping-item, .meal-entry { box-shadow: none; border: 1px solid #ddd; background: #fff; }
+      }
 
-    container.appendChild(div);
-  });
+    
+/* Fix image size for recipe cards */
+#recipesList img {
+  width: 100px !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 6px;
+  border-radius: 10px;
 }
 
-function updateSummary(){
-  const get = (key)=>[...selected[key]].map(i=>DATA[key][i]);
 
-  document.getElementById("summary").innerHTML = `
-    Légume : ${get("vegetables").join(", ") || "—"}<br>
-    Accompagnement : ${get("starches").join(", ") || "—"}<br>
-    Fromage : ${get("cheeses").join(", ") || "—"}<br>
-    Protéines : ${get("proteins").join(", ") || "—"}<br>
-    Sauce : ${get("sauces").join(", ") || "—"}
-  `;
+      
+      
+      
+      
+      
+      
+
+
+
+/* Images des plats */
+#recipesList .recipe-media {
+  width: 100px !important;
+  height: 100px !important;
+  margin: 0 auto 6px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: rgba(255,255,255,0.24) !important;
+  flex: 0 0 100px !important;
+}
+#recipesList .recipe-media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+#recipesList .recipe-media .thumb {
+  width: 100% !important;
+  height: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 34px !important;
+  background: transparent !important;
 }
 
-function renderMeals(){
-  const container = document.getElementById("meals");
+</style>
+    <meta name="theme-color" content="#f65f4c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Courses">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+  <body>
+    <div class="page">
+      <div class="shell">
+        <section class="card hero"><h1>Courses</h1></section>
 
-  meals.forEach(meal=>{
-    const div = document.createElement("div");
-    div.className = "meal";
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="plats"><span class="tab-svg tab-svg-plats" aria-hidden="true"></span><span>Plats</span></button>
+          <button class="tab-btn" data-tab="liste"><span class="tab-svg tab-svg-rayons" aria-hidden="true"></span><span>Rayons</span></button>
+          <button class="tab-btn tab-courses" data-tab="courses"><span class="tab-svg tab-svg-courses" aria-hidden="true"></span><span>Courses</span> <span id="mealCountBadge" class="count-badge">0</span></button>
+        </div>
 
-    div.innerHTML = `
-      <img src="${meal.img}">
-      <div>${meal.name}</div>
-    `;
+        <section id="tab-plats">
+          <section class="card meal-list" style="background:#f65f4c;border-color:#f65f4c;">
+            <h2 class="section-title">Plats</h2>
+            <div id="recipesList" class="grid-compact"></div>
+          </section>
+          <div class="spacer" id="builderTrigger"></div>
+          <section class="card shopping">
+            <h2 class="section-title">Créer</h2>
+            <div class="columns-3">
+              <div class="subcol"><div class="subcol-title">Légume</div><div id="vegetablesList" class="small-grid"></div></div>
+              <div class="subcol"><div class="subcol-title">Accompagnement</div><div id="starchesList" class="small-grid"></div></div>
+              <div class="subcol"><div class="subcol-title">Fromage</div><div id="cheesesList" class="small-grid"></div></div>
+              <div class="subcol"><div class="subcol-title">Protéines</div><div id="proteinsList" class="small-grid"></div></div>
+              <div class="subcol"><div class="subcol-title">Sauce</div><div id="saucesList" class="small-grid"></div></div>
+            </div>
+            <div id="customSummary" class="selected-summary"></div>
+          </section>
+        </section>
 
-    container.appendChild(div);
-  });
+        <section id="tab-liste" class="card tab-panel hidden">
+          <h2 class="section-title">Rayons</h2>
+          <div id="extrasContent"></div>
+        </section>
+
+        <section id="tab-courses" class="hidden">
+          <section class="card meal-list">
+            <h2 class="section-title">Liste de repas</h2>
+            <div id="mealEntries"></div>
+          </section>
+          <section class="card shopping">
+            <h2 class="section-title">Courses</h2>
+            <div id="shoppingContent"></div>
+            <div class="pdf-wrap"><button id="generatePdfBtn" class="btn btn-primary" type="button">Générer un PDF</button><button id="clearAllBtn" class="btn btn-secondary" type="button" style="margin-top:10px;">Tout effacer</button></div>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <div id="stickyPlats" class="sticky-cta">
+      <div class="inner"><button id="platsActionBtn" class="btn btn-secondary" type="button">Ajouter à la liste le plat</button></div>
+    </div>
+    <div id="stickyListe" class="sticky-cta hidden">
+      <div class="inner"><button id="addExtraBtn" class="btn btn-secondary" type="button">Ajouter à la liste</button></div>
+    </div>
+
+    <script>
+      const DATA = {
+        "recipes": [
+                {
+                        "name": "Haricot vert + Patate",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Pomme noisette",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥔"
+                                },
+                                {
+                                        "name": "Haricot vert",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🫛"
+                                }
+                        ]
+                },
+                {
+                        "name": "Patates + Pois + Carottes",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Patate",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 6,
+                                        "image": "🥔"
+                                },
+                                {
+                                        "name": "Petit pois",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🫛"
+                                },
+                                {
+                                        "name": "Carrotte surgelée",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "❄️"
+                                },
+                                {
+                                        "name": "Carrotte",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 4,
+                                        "image": "🥕"
+                                }
+                        ]
+                },
+                {
+                        "name": "Patates douce au four",
+                        "servings": 2,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Butternut",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🎃"
+                                },
+                                {
+                                        "name": "Patate douce",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 2,
+                                        "image": "🍠"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Fêta",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                }
+                        ]
+                },
+                {
+                        "name": "Coucous",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Légume couscous",
+                                        "store": "naturalia",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🥘"
+                                },
+                                {
+                                        "name": "Semoule",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🌾"
+                                }
+                        ]
+                },
+                {
+                        "name": "Quiche aux poireaux",
+                        "servings": 2,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Pate à quiche",
+                                        "store": "naturalia",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🥧"
+                                },
+                                {
+                                        "name": "Crême",
+                                        "store": "naturalia",
+                                        "zone": 4,
+                                        "qty": 1,
+                                        "image": "🥛"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Poireau",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🫛"
+                                },
+                                {
+                                        "name": "Fêta",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                },
+                                {
+                                        "name": "Fromage rapé",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                },
+                                {
+                                        "name": "Oeuf",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 3,
+                                        "image": "🥚"
+                                },
+                                {
+                                        "name": "Salade",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🥗"
+                                }
+                        ]
+                },
+                {
+                        "name": "Hachis Parmentier",
+                        "servings": 2,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Patate douce",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 2,
+                                        "image": "🍠"
+                                },
+                                {
+                                        "name": "Butternut",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🎃"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Buffala",
+                                        "store": "naturalia",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                },
+                                {
+                                        "name": "Viande hachée",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥩"
+                                },
+                                {
+                                        "name": "Fromage rapé",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                }
+                        ]
+                },
+                {
+                        "name": "Gratin de courgettes",
+                        "servings": 2,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Courgette",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 4,
+                                        "image": "🥒"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Sauce tomate",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 2,
+                                        "image": "🥫"
+                                },
+                                {
+                                        "name": "Viande hachée",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥩"
+                                },
+                                {
+                                        "name": "Riz",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🍚"
+                                }
+                        ]
+                },
+                {
+                        "name": "Courgettes sauce tomate",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Courgette",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥒"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Sauce tomate",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🥫"
+                                },
+                                {
+                                        "name": "Riz",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🍚"
+                                },
+                                {
+                                        "name": "Fêta",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                }
+                        ]
+                },
+                {
+                        "name": "Omelette espagnole",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Courgette",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥒"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Patate",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 3,
+                                        "image": "🥔"
+                                },
+                                {
+                                        "name": "Poivron",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🫑"
+                                },
+                                {
+                                        "name": "Oeuf",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 4,
+                                        "image": "🥚"
+                                }
+                        ]
+                },
+                {
+                        "name": "Lasagnes",
+                        "servings": 2,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Pate",
+                                        "store": "bio",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🍝"
+                                },
+                                {
+                                        "name": "Viande hachée",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥩"
+                                },
+                                {
+                                        "name": "Oignon",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🧅"
+                                },
+                                {
+                                        "name": "Sauce tomate",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 2,
+                                        "image": "🥫"
+                                },
+                                {
+                                        "name": "Crême",
+                                        "store": "naturalia",
+                                        "zone": 4,
+                                        "qty": 1,
+                                        "image": "🥛"
+                                },
+                                {
+                                        "name": "Fromage rapé",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                }
+                        ]
+                },
+                {
+                        "name": "Croques monsieur",
+                        "servings": 2,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Pain croques",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🍞"
+                                },
+                                {
+                                        "name": "Jambon",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 2,
+                                        "image": "🐖"
+                                },
+                                {
+                                        "name": "Chèvre à tartiner",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                },
+                                {
+                                        "name": "Salade",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🥗"
+                                }
+                        ]
+                },
+                {
+                        "name": "Pizza",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Pizza",
+                                        "store": "picard",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🍕"
+                                },
+                                {
+                                        "name": "Buffala",
+                                        "store": "naturalia",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                },
+                                {
+                                        "name": "Salade",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🥗"
+                                },
+                                {
+                                        "name": "Jambon",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 1,
+                                        "image": "🐖"
+                                }
+                        ]
+                },
+                {
+                        "name": "Salade d'endives",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": [
+                                {
+                                        "name": "Endive",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 3,
+                                        "image": "🥬"
+                                },
+                                {
+                                        "name": "Noix",
+                                        "store": "naturalia",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🥜"
+                                },
+                                {
+                                        "name": "Pomme de terre",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🥔"
+                                },
+                                {
+                                        "name": "Pomme",
+                                        "store": "naturalia",
+                                        "zone": 1,
+                                        "qty": 1,
+                                        "image": "🍎"
+                                },
+                                {
+                                        "name": "Fêta",
+                                        "store": "carrefour",
+                                        "zone": 3,
+                                        "qty": 1,
+                                        "image": "🧀"
+                                },
+                                {
+                                        "name": "Jambon",
+                                        "store": "carrefour",
+                                        "zone": 2,
+                                        "qty": 2,
+                                        "image": "🐖"
+                                }
+                        ]
+                },
+                {
+                        "name": "Tarte aux légumes",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Tartes aux tomates",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Salade Melon",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Croquettes",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Gnocci",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Salade Libanaise",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Salade Grecque",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Salade chèvre chaud",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Jardinière de légumes",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                },
+                {
+                        "name": "Ratatouille",
+                        "servings": 1,
+                        "image": "🍽️",
+                        "ingredients": []
+                }
+        ],
+        "vegetables": [
+                {
+                        "name": "Brocoli",
+                        "store": "carrefour",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥦"
+                },
+                {
+                        "name": "Butternut",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🎃"
+                },
+                {
+                        "name": "Carrotte",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥕"
+                },
+                {
+                        "name": "Carrotte surgelée",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "❄️"
+                },
+                {
+                        "name": "Courgette",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥒"
+                },
+                {
+                        "name": "Échalote",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧅"
+                },
+                {
+                        "name": "Endive",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥬"
+                },
+                {
+                        "name": "Haricot vert",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫛"
+                },
+                {
+                        "name": "Légume couscous",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥘"
+                },
+                {
+                        "name": "Oignon",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧅"
+                },
+                {
+                        "name": "Patate douce",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍠"
+                },
+                {
+                        "name": "Petit pois",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫛"
+                },
+                {
+                        "name": "Poireau",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫛"
+                },
+                {
+                        "name": "Poivron",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫑"
+                },
+                {
+                        "name": "Salade",
+                        "store": "carrefour",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥗"
+                }
+        ],
+        "starches": [
+                {
+                        "name": "Boulette de légume",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🧆"
+                },
+                {
+                        "name": "Gniocci",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥔"
+                },
+                {
+                        "name": "Patate rösti",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔"
+                },
+                {
+                        "name": "Patate",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔"
+                },
+                {
+                        "name": "Patatoes",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔"
+                },
+                {
+                        "name": "Pate",
+                        "store": "bio",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍝"
+                },
+                {
+                        "name": "Polenta",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌽"
+                },
+                {
+                        "name": "Pomme dauphine",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔"
+                },
+                {
+                        "name": "Pomme noisette",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔"
+                },
+                {
+                        "name": "Quinoa",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌾"
+                },
+                {
+                        "name": "Riz",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🍚"
+                },
+                {
+                        "name": "Semoule",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌾"
+                }
+        ],
+        "proteins": [
+                {
+                        "name": "Corail",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🫘"
+                },
+                {
+                        "name": "Œuf",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥚"
+                },
+                {
+                        "name": "Jambon",
+                        "store": "carrefour",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🐖"
+                },
+                {
+                        "name": "Lentille",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🫘"
+                },
+                {
+                        "name": "Poisson pané",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🐟"
+                },
+                {
+                        "name": "Viande hachée",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥩"
+                }
+        ],
+        "cheeses": [
+                {
+                        "name": "Buffala",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🧀"
+                },
+                {
+                        "name": "Chèvre à tartiner",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀"
+                },
+                {
+                        "name": "Fêta",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀"
+                },
+                {
+                        "name": "Fromage rapé",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀"
+                },
+                {
+                        "name": "Mme Loïc",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀"
+                },
+                {
+                        "name": "Parmesan",
+                        "store": "fromagerie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧀"
+                },
+                {
+                        "name": "Tomme grise",
+                        "store": "fromagerie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧀"
+                }
+        ],
+        "sauces": [
+                {
+                        "name": "Crême",
+                        "store": "naturalia",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🥛"
+                },
+                {
+                        "name": "Ketchup",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🍅"
+                },
+                {
+                        "name": "Sauce arrabiata",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌶️"
+                },
+                {
+                        "name": "Sauce tomate",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥫"
+                }
+        ],
+        "extras": [
+                {
+                        "name": "Base",
+                        "store": "base",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🛒",
+                        "category": "Base"
+                },
+                {
+                        "name": "Boulette de légume",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🧆",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Gniocci",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Patate rösti",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Patate",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Patatoes",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Pate",
+                        "store": "bio",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍝",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Polenta",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌽",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Pomme dauphine",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Pomme noisette",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Quinoa",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌾",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Riz",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🍚",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "Semoule",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌾",
+                        "category": "Accompagnement"
+                },
+                {
+                        "name": "5 baies",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧂",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Basilic",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌿",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Huile d'olive",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🫒",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Pimant",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌶️",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Poivre",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧂",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Sel",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧂",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Vinaigre",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🍶",
+                        "category": "Assaisonnement"
+                },
+                {
+                        "name": "Céréales nuit",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥣",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Compote en pot",
+                        "store": "naturalia",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🍎",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Coton",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "☁️",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Couche",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🩲",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Doliprane",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "💊",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Eau",
+                        "store": "carrefour",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🍼",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Gâteaux",
+                        "store": "naturalia",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🍰",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "La Roche Posay",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧴",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Lait",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥛",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Petit suisse",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥛",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Popote",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥣",
+                        "category": "Bébé"
+                },
+                {
+                        "name": "Ginger beer",
+                        "store": "carrefour",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🥤",
+                        "category": "Boissons"
+                },
+                {
+                        "name": "Pétillant",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "💧",
+                        "category": "Boissons"
+                },
+                {
+                        "name": "Thé",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🫖",
+                        "category": "Boissons"
+                },
+                {
+                        "name": "Buffala",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Chèvre à tartiner",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Fêta",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Fromage rapé",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Mme Loïc",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Parmesan",
+                        "store": "fromagerie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Tomme grise",
+                        "store": "fromagerie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧀",
+                        "category": "Fromage"
+                },
+                {
+                        "name": "Banane",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍌",
+                        "category": "Fruit"
+                },
+                {
+                        "name": "Fraise",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍓",
+                        "category": "Fruit"
+                },
+                {
+                        "name": "Framboise",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍓",
+                        "category": "Fruit"
+                },
+                {
+                        "name": "Myrtille",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫐",
+                        "category": "Fruit"
+                },
+                {
+                        "name": "Pomme",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍎",
+                        "category": "Fruit"
+                },
+                {
+                        "name": "Brocoli",
+                        "store": "carrefour",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥦",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Butternut",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🎃",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Carrotte",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥕",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Carrotte surgelée",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "❄️",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Courgette",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥒",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Échalote",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧅",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Endive",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥬",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Haricot vert",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫛",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Légume couscous",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥘",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Oignon",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧅",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Patate douce",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍠",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Petit pois",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫛",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Poireau",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫛",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Poivron",
+                        "store": "naturalia",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🫑",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Salade",
+                        "store": "carrefour",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥗",
+                        "category": "Légume"
+                },
+                {
+                        "name": "Cracottes",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🍞",
+                        "category": "Pain"
+                },
+                {
+                        "name": "Pain croques",
+                        "store": "carrefour",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🍞",
+                        "category": "Pain"
+                },
+                {
+                        "name": "Pate à quiche",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥧",
+                        "category": "Pain"
+                },
+                {
+                        "name": "Pizza",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🍕",
+                        "category": "Pain"
+                },
+                {
+                        "name": "Café",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "☕",
+                        "category": "Petit déjeuner"
+                },
+                {
+                        "name": "Beurre",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧈",
+                        "category": "Petit déjeuner"
+                },
+                {
+                        "name": "Confiture",
+                        "store": "naturalia",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🍓",
+                        "category": "Petit déjeuner"
+                },
+                {
+                        "name": "Jus d'orange",
+                        "store": "naturalia",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🧃",
+                        "category": "Petit déjeuner"
+                },
+                {
+                        "name": "Krisprolls",
+                        "store": "naturalia",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🥖",
+                        "category": "Petit déjeuner"
+                },
+                {
+                        "name": "Cif",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧴",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Crême solaire",
+                        "store": "pharmacie",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🧴",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Éponge",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧽",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Mousse à raser",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧴",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Lessive",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧺",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Liquide vaisselle",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧴",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Pastille lave vaisselle",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧼",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Papier toilette",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🧻",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Rasoir",
+                        "store": "carrefour",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🪒",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Sac poubelle 30L",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🗑️",
+                        "category": "Produits ménagers"
+                },
+                {
+                        "name": "Corail",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🫘",
+                        "category": "Protéines"
+                },
+                {
+                        "name": "Œuf",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥚",
+                        "category": "Protéines"
+                },
+                {
+                        "name": "Jambon",
+                        "store": "carrefour",
+                        "zone": 2,
+                        "qty": 1,
+                        "image": "🐖",
+                        "category": "Protéines"
+                },
+                {
+                        "name": "Lentille",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🫘",
+                        "category": "Protéines"
+                },
+                {
+                        "name": "Poisson pané",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🐟",
+                        "category": "Protéines"
+                },
+                {
+                        "name": "Viande hachée",
+                        "store": "picard",
+                        "zone": 1,
+                        "qty": 1,
+                        "image": "🥩",
+                        "category": "Protéines"
+                },
+                {
+                        "name": "Crême",
+                        "store": "naturalia",
+                        "zone": 4,
+                        "qty": 1,
+                        "image": "🥛",
+                        "category": "Sauce"
+                },
+                {
+                        "name": "Ketchup",
+                        "store": "carrefour",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🍅",
+                        "category": "Sauce"
+                },
+                {
+                        "name": "Sauce arrabiata",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🌶️",
+                        "category": "Sauce"
+                },
+                {
+                        "name": "Sauce tomate",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥫",
+                        "category": "Sauce"
+                },
+                {
+                        "name": "Chips",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥔",
+                        "category": "Snacks"
+                },
+                {
+                        "name": "Gâteaux Morgane",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🍰",
+                        "category": "Snacks"
+                },
+                {
+                        "name": "Noix",
+                        "store": "naturalia",
+                        "zone": 3,
+                        "qty": 1,
+                        "image": "🥜",
+                        "category": "Snacks"
+                }
+        ]
+};
+      const STORE_LABELS = { base: 'Base', pharmacie: 'Pharmacie', fromagerie: 'Fromagerie', bio: 'Bio', naturalia: 'Naturalia', carrefour: 'Carrefour', picard: 'Picard' };
+      const STORE_ORDER = ['pharmacie', 'fromagerie', 'bio', 'naturalia', 'carrefour', 'picard'];
+      const STORE_COLORS = { naturalia: '#ffa549', carrefour: '#0a53a8', picard: '#bfe1f6', bio: '#215a6c', pharmacie: '#0ab81b', 'fromagerie': '#e8d7b4' };
+
+      function getStoreCardStyle(store) {
+        const bg = STORE_COLORS[store] || '#efefee';
+        const darkTextStores = new Set(['picard', 'fromagerie']);
+        const text = darkTextStores.has(store) ? '#111' : '#fff';
+        return `background:${bg};color:${text};`;
+      }
+      let selectedRecipeIndexes = new Set();
+      let selectedVegetableIndexes = new Set();
+      let selectedStarchIndexes = new Set();
+      let selectedProteinIndexes = new Set();
+      let selectedSauceIndexes = new Set();
+      let selectedCheeseIndexes = new Set();
+      let selectedExtraKeys = new Set();
+      let builtMeals = [];
+      let extraItemsAdded = [];
+      let shoppingOverrides = {};
+      let platsMode = 'recipes';
+
+      function normalizeName(name) {
+        const map = {
+          'Pommes de terres': 'Patates',
+          'Pommes de terre': 'Patates',
+          'Patate': 'Patates',
+          'Patates': 'Patates',
+          'Patate rösti': 'Patate rösti',
+          'Patatoes': 'Patatoes',
+          'Pommes noisettes': 'Pomme noisette',
+          'Oignon': 'Oignons',
+          'Oignons': 'Oignons',
+          'Oeufs': 'Œuf',
+          'Viande hachée': 'Viande haché',
+          'Pates': 'Pattes',
+          'Pate': 'Pate',
+          'Pommes': 'Pomme',
+          'Buffalat': 'Buffalat'
+        };
+        return map[name] || name;
+      }
+
+      function imageFor(item) { return item.image || '🍽️'; }
+      function cloneIngredient(ingredient) { return { ...ingredient, name: normalizeName(ingredient.name), qty: Number(ingredient.qty || 1) }; }
+      function toggleInSet(set, value) { if (set.has(value)) set.delete(value); else set.add(value); }
+      function namesFromSet(items, set) { return [...set].map((index) => normalizeName(items[index].name)); }
+
+      function getBaseExistingNames() {
+        const names = new Set();
+        DATA.recipes.forEach((recipe) => recipe.ingredients.forEach((ingredient) => names.add(normalizeName(ingredient.name))));
+        DATA.vegetables.forEach((item) => names.add(normalizeName(item.name)));
+        DATA.starches.forEach((item) => names.add(normalizeName(item.name)));
+        DATA.proteins.forEach((item) => names.add(normalizeName(item.name)));
+        DATA.sauces.forEach((item) => names.add(normalizeName(item.name)));
+        DATA.cheeses.forEach((item) => names.add(normalizeName(item.name)));
+        return names;
+      }
+
+      function getFilteredExtras() {
+        return DATA.extras
+          .map((item) => ({ ...item, normalizedName: normalizeName(item.name), categoryName: item.category || 'Autres' }))
+          .sort((a, b) => {
+            const categoryDelta = a.categoryName.localeCompare(b.categoryName, 'fr');
+            if (categoryDelta !== 0) return categoryDelta;
+            return a.normalizedName.localeCompare(b.normalizedName, 'fr');
+          });
+      }
+
+      function setTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach((button) => {
+          button.classList.toggle('active', button.getAttribute('data-tab') === tab);
+        });
+        document.getElementById('tab-plats').classList.toggle('hidden', tab !== 'plats');
+        document.getElementById('tab-liste').classList.toggle('hidden', tab !== 'liste');
+        document.getElementById('tab-courses').classList.toggle('hidden', tab !== 'courses');
+        document.getElementById('stickyPlats').classList.toggle('hidden', tab !== 'plats');
+        document.getElementById('stickyListe').classList.toggle('hidden', tab !== 'liste');
+        updatePlatsActionButton();
+      }
+
+      function updateMealCountBadge() {
+        document.getElementById('mealCountBadge').textContent = String(builtMeals.length);
+      }
+
+      function updatePlatsActionButton() {
+        const btn = document.getElementById('platsActionBtn');
+        if (platsMode === 'recipes') {
+          btn.textContent = 'Ajouter le plat';
+          btn.className = selectedRecipeIndexes.size > 0 ? 'btn btn-primary' : 'btn btn-secondary';
+        } else {
+          btn.textContent = 'Créer';
+          const hasAnySelection = selectedVegetableIndexes.size > 0 || selectedStarchIndexes.size > 0 || selectedCheeseIndexes.size > 0 || selectedProteinIndexes.size > 0 || selectedSauceIndexes.size > 0;
+          btn.className = hasAnySelection ? 'btn btn-secondary is-active' : 'btn btn-secondary';
+        }
+      }
+
+      function renderRecipes() {
+        const root = document.getElementById('recipesList');
+        const recipeImages = {
+          'Croques monsieur': 'images/Croques-monsieur.jpeg',
+          'Gratin de courgettes': 'images/Gratin-de-courgettes.WEBP',
+          'Hachi': 'images/Hachi-parmentier.JPG',
+          'Hachis Parmentier': 'images/Hachi-parmentier.JPG',
+          'Courgettes sauce tomate': 'images/Courgettes-sauce-tomate.JPG',
+          'Coucous': 'images/Couscous.WEBP',
+          'Couscous': 'images/Couscous.WEBP',
+          "Salade d'endives": 'images/Salade-d-endives.JPG',
+          'PDT + PP + C': 'images/Pomme-de-terre-petits-poids-carottes.JPG',
+          'Patates + Pois + Carottes': 'images/Pomme-de-terre-petits-poids-carottes.JPG',
+          'Quiche aux poireaux': 'images/Quiche.WEBP',
+          'Quiche': 'images/Quiche.WEBP',
+          'Haricot vert + Patates': 'images/Haricots-vert-patates.JPG',
+          'Haricot vert + Patate': 'images/Haricots-vert-patates.JPG',
+          'Patates et Patates douce au four': 'images/Patates-douces.PNG',
+          'Patates douce au four': 'images/Patates-douces.PNG',
+          'Lasagnes': 'images/Lasagnes.JPG',
+          'Pizza': 'images/Pizza.WEBP',
+          'Omelette espagnole': 'images/Omelette.JPG',
+        };
+        root.innerHTML = DATA.recipes.map((recipe, index) => ({ recipe, index })).sort((a, b) => a.recipe.name.localeCompare(b.recipe.name, 'fr')).map(({ recipe, index }) => {
+          const selected = selectedRecipeIndexes.has(index) ? 'active' : '';
+          const imgSrc = recipeImages[recipe.name] || '';
+          return `
+            <button class="item ${selected}" type="button" data-recipe-index="${index}">
+              <div class="recipe-media">${imgSrc ? `<img src="${imgSrc}" alt="${recipe.name}" loading="lazy" />` : `<span class="thumb">${imageFor(recipe)}</span>`}</div>
+              <div class="item-row"><div class="item-name">${recipe.name}</div></div>
+              <div class="chips"><span class="chip">${recipe.servings} repas</span></div>
+            </button>
+          `;
+        }).join('');
+        root.querySelectorAll('[data-recipe-index]').forEach((button) => {
+          button.addEventListener('click', () => {
+            toggleInSet(selectedRecipeIndexes, Number(button.getAttribute('data-recipe-index')));
+            renderRecipes();
+          });
+        });
+        updatePlatsActionButton();
+      }
+
+      function renderSelectableList(rootId, items, selectedSet, key) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = items.map((item, index) => ({ item, index })).sort((a, b) => a.item.name.localeCompare(b.item.name, 'fr')).map(({ item, index }) => {
+          const selected = selectedSet.has(index) ? 'active' : '';
+          return `
+            <button class="small-item ${selected}" type="button" data-key="${key}" data-index="${index}">
+              <div class="item-row"><span class="thumb">${imageFor(item)}</span><div class="item-name">${item.name}</div></div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      function bindSelectableLists() {
+        document.querySelectorAll('[data-key="vegetable"]').forEach((button) => button.addEventListener('click', () => { toggleInSet(selectedVegetableIndexes, Number(button.getAttribute('data-index'))); renderBuilder(); }));
+        document.querySelectorAll('[data-key="starch"]').forEach((button) => button.addEventListener('click', () => { toggleInSet(selectedStarchIndexes, Number(button.getAttribute('data-index'))); renderBuilder(); }));
+        document.querySelectorAll('[data-key="protein"]').forEach((button) => button.addEventListener('click', () => { toggleInSet(selectedProteinIndexes, Number(button.getAttribute('data-index'))); renderBuilder(); }));
+        document.querySelectorAll('[data-key="sauce"]').forEach((button) => button.addEventListener('click', () => { toggleInSet(selectedSauceIndexes, Number(button.getAttribute('data-index'))); renderBuilder(); }));
+        document.querySelectorAll('[data-key="cheese"]').forEach((button) => button.addEventListener('click', () => { toggleInSet(selectedCheeseIndexes, Number(button.getAttribute('data-index'))); renderBuilder(); }));
+      }
+
+      function renderBuilder() {
+        renderSelectableList('vegetablesList', DATA.vegetables, selectedVegetableIndexes, 'vegetable');
+        renderSelectableList('starchesList', DATA.starches, selectedStarchIndexes, 'starch');
+        renderSelectableList('cheesesList', DATA.cheeses, selectedCheeseIndexes, 'cheese');
+        renderSelectableList('proteinsList', DATA.proteins, selectedProteinIndexes, 'protein');
+        renderSelectableList('saucesList', DATA.sauces, selectedSauceIndexes, 'sauce');
+        bindSelectableLists();
+        const vegetables = namesFromSet(DATA.vegetables, selectedVegetableIndexes);
+        const starches = namesFromSet(DATA.starches, selectedStarchIndexes);
+        const cheeses = namesFromSet(DATA.cheeses, selectedCheeseIndexes);
+        const proteins = namesFromSet(DATA.proteins, selectedProteinIndexes);
+        const sauces = namesFromSet(DATA.sauces, selectedSauceIndexes);
+        document.getElementById('customSummary').innerHTML = `
+          <strong>Repas en cours :</strong><br>
+          Légume : ${vegetables.length ? vegetables.join(', ') : '—'}<br>
+          Accompagnement : ${starches.length ? starches.join(', ') : '—'}<br>
+          Fromage : ${cheeses.length ? cheeses.join(', ') : '—'}<br>
+          Protéines : ${proteins.length ? proteins.join(', ') : '—'}<br>
+          Sauce : ${sauces.length ? sauces.join(', ') : '—'}
+        `;
+        updatePlatsActionButton();
+      }
+
+      function renderExtras() {
+        const root = document.getElementById('extrasContent');
+
+        const groups = {};
+
+        const categorizeExtra = (item) => {
+          const n = normalizeName(item.name).toLowerCase();
+          if (n === 'base') return '0_Base';
+          const categoryMap = {
+            'Légumes': 'Légume',
+            'Légume': 'Légume',
+            'Fromage': 'Fromage',
+            'Fromage': 'Fromage',
+            'Sauce': 'Sauce',
+            'Sauce': 'Sauce',
+            'Proétines': 'Protéines',
+            'Protéine': 'Protéines',
+            'Snack': 'Snacks',
+            'Produit ménager': 'Produits ménagers'
+          };
+          const category = categoryMap[item.category] || item.category;
+          return category || (STORE_LABELS[item.store] || item.store);
+        };
+
+        getFilteredExtras().forEach((item) => {
+          const category = categorizeExtra(item);
+          if (!groups[category]) groups[category] = [];
+          groups[category].push({ ...item, normalizedName: normalizeName(item.name) });
+        });
+
+        Object.keys(groups).forEach((groupName) => {
+          const seen = new Set();
+          groups[groupName] = groups[groupName]
+            .filter((item) => {
+              const key = `${item.store}__${item.normalizedName}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
+            .sort((a, b) => a.normalizedName.localeCompare(b.normalizedName, 'fr'));
+        });
+
+        const allItemsByGroup = Object.fromEntries(
+          Object.entries(groups).map(([g, items]) => [g, new Set(items.map((i) => i.normalizedName.toLowerCase()))])
+        );
+
+        const shouldHideSoloGroup = (groupLabel, items) => {
+          if (items.length !== 1) return false;
+          const onlyName = items[0].normalizedName.toLowerCase();
+          if (!['brocolis', 'jambon'].includes(onlyName)) return false;
+          return Object.entries(allItemsByGroup).some(([otherGroup, names]) => otherGroup !== groupLabel && names.has(onlyName));
+        };
+
+        const entries = Object.entries(groups)
+          .filter(([groupLabel, items]) => items.length && groupLabel !== 'LÉGUMES' && groupLabel !== 'FÉCULENTS ET ACCOMPAGNEMENTS' && groupLabel !== 'Légumes' && groupLabel !== 'Féculents et accompagnements' && !shouldHideSoloGroup(groupLabel, items))
+          .sort((a,b)=> a[0].localeCompare(b[0],'fr'));
+
+        if (!entries.length) {
+          root.innerHTML = '<div class="empty">Aucun autre achat disponible.</div>';
+          document.getElementById('addExtraBtn').className = 'btn btn-secondary';
+          return;
+        }
+
+        root.innerHTML = entries.map(([groupLabel, items]) => `
+          <div class="subcol" style="margin-bottom:12px;">
+            <div class="subcol-title">${groupLabel === '0_Base' ? 'Base' : groupLabel}</div>
+            <div class="small-grid">
+              ${items.map((item) => {
+                const key = `${item.store}__${item.normalizedName}`;
+                const selected = selectedExtraKeys.has(key) ? 'active' : '';
+                return `
+                  <button class="small-item ${selected}" type="button" data-extra-key="${key}">
+                    <div class="item-row"><span class="thumb">${item.image || '🍽️'}</span><div class="item-name">${item.normalizedName}</div></div>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `).join('');
+
+        root.querySelectorAll('[data-extra-key]').forEach((button) => button.addEventListener('click', () => {
+          toggleInSet(selectedExtraKeys, button.getAttribute('data-extra-key'));
+          renderExtras();
+        }));
+        document.getElementById('addExtraBtn').className = selectedExtraKeys.size > 0 ? 'btn btn-primary' : 'btn btn-secondary';
+      }
+
+      function addRecipeToMeals() {
+        if (!selectedRecipeIndexes.size) return;
+        [...selectedRecipeIndexes].forEach((recipeIndex) => {
+          const recipe = DATA.recipes[recipeIndex];
+          const occurrences = recipe.servings === 2 ? 2 : 1;
+          const contributionKey = `recipe-${recipeIndex}-${Date.now()}-${Math.random()}`;
+          for (let i = 0; i < occurrences; i += 1) {
+            builtMeals.push({ id: `${contributionKey}-${i}`, contributionKey, title: recipe.name, image: imageFor(recipe), subtitle: recipe.servings === 2 ? `Plat existant · portion ${i + 1}/${occurrences}` : 'Plat existant', ingredients: recipe.ingredients.map((ingredient) => cloneIngredient(ingredient)) });
+          }
+        });
+        selectedRecipeIndexes = new Set();
+        renderRecipes();
+        renderMealsAndShopping();
+        updateMealCountBadge();
+      }
+
+      function addCustomMeal() {
+        if (!selectedVegetableIndexes.size && !selectedStarchIndexes.size && !selectedCheeseIndexes.size && !selectedSauceIndexes.size) return;
+        const vegetables = [...selectedVegetableIndexes].map((index) => DATA.vegetables[index]);
+        const starches = [...selectedStarchIndexes].map((index) => DATA.starches[index]);
+        const cheeses = [...selectedCheeseIndexes].map((index) => DATA.cheeses[index]);
+        const proteins = [...selectedProteinIndexes].map((index) => DATA.proteins[index]);
+        const sauces = [...selectedSauceIndexes].map((index) => DATA.sauces[index]);
+
+        const titleParts = [];
+        if (vegetables.length) titleParts.push(vegetables.map((item) => item.name).join(', '));
+        if (starches.length) titleParts.push(starches.map((item) => item.name).join(', '));
+        if (cheeses.length) titleParts.push(cheeses.map((item) => item.name).join(', '));
+        if (proteins.length) titleParts.push(proteins.map((item) => item.name).join(', '));
+        if (sauces.length) titleParts.push(sauces.map((item) => item.name).join(', '));
+
+        builtMeals.push({
+          id: `custom-${Date.now()}-${Math.random()}`,
+          contributionKey: `custom-${Date.now()}-${Math.random()}`,
+          title: titleParts.join(' + '),
+          image: '🍽️',
+          subtitle: 'Repas créé manuellement',
+          ingredients: [
+            ...vegetables.map((item) => cloneIngredient({ ...item, qty: 1 })),
+            ...starches.map((item) => cloneIngredient({ ...item, qty: 1 })),
+            ...cheeses.map((item) => cloneIngredient({ ...item, qty: 1 })),
+            ...proteins.map((item) => cloneIngredient({ ...item, qty: 1 })),
+            ...sauces.map((item) => cloneIngredient({ ...item, qty: 1 }))
+          ]
+        });
+
+        selectedVegetableIndexes = new Set();
+        selectedStarchIndexes = new Set();
+        selectedCheeseIndexes = new Set();
+        selectedProteinIndexes = new Set();
+        selectedSauceIndexes = new Set();
+        selectedRecipeIndexes = new Set();
+
+        renderRecipes();
+        renderBuilder();
+        renderExtras();
+        renderMealsAndShopping();
+        updateMealCountBadge();
+      }
+
+      function addExtrasToShopping() {
+        if (!selectedExtraKeys.size) return;
+
+        const catalog = [];
+        DATA.vegetables.forEach((item) => catalog.push({ ...item, normalizedName: normalizeName(item.name), qty: 1 }));
+        DATA.starches.forEach((item) => catalog.push({ ...item, normalizedName: normalizeName(item.name), qty: 1 }));
+        DATA.proteins.forEach((item) => catalog.push({ ...item, normalizedName: normalizeName(item.name), qty: 1 }));
+        DATA.sauces.forEach((item) => catalog.push({ ...item, normalizedName: normalizeName(item.name), qty: 1 }));
+        if (DATA.cheeses) DATA.cheeses.forEach((item) => catalog.push({ ...item, normalizedName: normalizeName(item.name), qty: 1 }));
+        getFilteredExtras().forEach((item) => catalog.push({ ...item, normalizedName: normalizeName(item.name), qty: item.qty || 1 }));
+
+        const normalizeForSearch = (value) => normalizeName(value).toLowerCase().replace(/[’']/g, "'").trim();
+
+        const addFoundItem = (found, sourceLabel) => {
+          extraItemsAdded.push({
+            id: `extra-${Date.now()}-${Math.random()}`,
+            contributionKey: `extra-${sourceLabel}-${found.store}-${found.normalizedName}-${Date.now()}-${Math.random()}`,
+            title: found.normalizedName,
+            image: found.image || '🍽️',
+            subtitle: sourceLabel,
+            ingredients: [{ name: found.normalizedName, store: found.store, zone: found.zone || 1, qty: found.qty || 1, image: found.image || '🍽️' }]
+          });
+        };
+
+        const addBaseItems = () => {
+          const baseNames = [
+            'Jus d’orange',
+            'Cracottes',
+            'Noix',
+            'Pétillant',
+            'Café',
+            'Tomme grise',
+            'Banane',
+            'Chips'
+          ];
+
+          baseNames.forEach((baseName) => {
+            const target = normalizeForSearch(baseName);
+            const found = catalog.find((item) => normalizeForSearch(item.normalizedName || item.name) === target);
+            if (found) addFoundItem(found, 'Base');
+          });
+        };
+
+        [...selectedExtraKeys].forEach((selectedKey) => {
+          const found = catalog.find((item) => `${item.store}__${item.normalizedName}` === selectedKey);
+          if (!found) return;
+
+          if (normalizeName(found.normalizedName || found.name).toLowerCase() === 'base') {
+            addBaseItems();
+          } else {
+            addFoundItem(found, 'Ajout libre');
+          }
+        });
+
+        selectedExtraKeys = new Set();
+        renderExtras();
+        renderMealsAndShopping();
+      }
+
+      function removeMeal(id) {
+        builtMeals = builtMeals.filter((meal) => meal.id !== id);
+        extraItemsAdded = extraItemsAdded.filter((item) => item.id !== id);
+        renderMealsAndShopping();
+        updateMealCountBadge();
+      }
+
+      function getGroupedShopping() {
+        const countedContributionKeys = new Set();
+        const allEntries = [...builtMeals, ...extraItemsAdded];
+        const shoppingMap = allEntries.reduce((accumulator, meal) => {
+          if (countedContributionKeys.has(meal.contributionKey)) return accumulator;
+          countedContributionKeys.add(meal.contributionKey);
+          meal.ingredients.forEach((ingredient) => {
+            const store = ingredient.store || 'naturalia';
+            const zone = Number(ingredient.zone || 1);
+            const normalizedName = normalizeName(ingredient.name);
+            const key = `${store}__${zone}__${normalizedName}`;
+            if (!accumulator[key]) accumulator[key] = { key, store, zone, name: normalizedName, image: ingredient.image || '🍽️', qty: 0 };
+            accumulator[key].qty += Number(ingredient.qty || 1);
+          });
+          return accumulator;
+        }, {});
+        Object.keys(shoppingOverrides).forEach((key) => { if (shoppingMap[key]) shoppingMap[key].qty = shoppingOverrides[key]; });
+        return Object.values(shoppingMap)
+          .filter((item) => Number(item.qty) > 0)
+          .sort((a, b) => {
+            const storeDelta = STORE_ORDER.indexOf(a.store) - STORE_ORDER.indexOf(b.store);
+            if (storeDelta !== 0) return storeDelta;
+            if (a.zone !== b.zone) return a.zone - b.zone;
+            return a.name.localeCompare(b.name, 'fr');
+          })
+          .filter((item) => item.qty > 0)
+          .reduce((accumulator, item) => {
+            if (!accumulator[item.store]) accumulator[item.store] = {};
+            if (!accumulator[item.store][item.zone]) accumulator[item.store][item.zone] = [];
+            accumulator[item.store][item.zone].push(item);
+            return accumulator;
+          }, {});
+      }
+
+      function renderMealsAndShopping() {
+        const mealsRoot = document.getElementById('mealEntries');
+        if (!builtMeals.length && !extraItemsAdded.length) {
+          mealsRoot.innerHTML = '<div class="empty">Aucun repas ajouté pour le moment.</div>';
+        } else {
+          mealsRoot.innerHTML = builtMeals.map((meal, index) => `
+            <div class="meal-entry">
+              <div>
+                <div class="meal-entry-title"><span class="thumb">${index + 1}</span> ${meal.title}</div>
+                <div class="meal-entry-meta">${meal.subtitle}</div>
+              </div>
+              <button class="remove-btn" type="button" data-remove-id="${meal.id}">Retirer</button>
+            </div>
+          `).join('');
+          mealsRoot.querySelectorAll('[data-remove-id]').forEach((button) => button.addEventListener('click', () => removeMeal(button.getAttribute('data-remove-id'))));
+        }
+
+        const grouped = getGroupedShopping();
+        const shoppingRoot = document.getElementById('shoppingContent');
+        if (!Object.keys(grouped).length) {
+          shoppingRoot.innerHTML = '<div class="empty">La liste de courses apparaîtra ici dès que tu ajoutes un repas.</div>';
+          return;
+        }
+        shoppingRoot.innerHTML = STORE_ORDER.filter((store) => grouped[store]).map((store) => {
+          const zones = Object.entries(grouped[store]).map(([zone, items]) => {
+            const itemsHtml = items.map((item) => `
+              <div class="shopping-item">
+                <div class="shopping-name"><span class="thumb">${item.image}</span><span>${item.name}</span></div>
+                <div class="qty-wrap">
+                  <select class="qty-input" data-shopping-key="${item.key}">${Array.from({ length: 10 }, (_, i) => i + 1).map((qty) => `<option value="${qty}" ${qty === item.qty ? 'selected' : ''}>${qty}</option>`).join('')}</select>
+                  <button class="delete-ingredient-btn" type="button" data-delete-shopping-key="${item.key}">×</button>
+                </div>
+              </div>
+            `).join('');
+            return `<div class="zone-group"><div class="zone-title">Zone ${zone}</div>${itemsHtml}</div>`;
+          }).join('');
+          return `<div class="store-card" style="${getStoreCardStyle(store)}"><div class="store-title">${STORE_LABELS[store]}</div>${zones}</div>`;
+        }).join('');
+        shoppingRoot.querySelectorAll('[data-shopping-key]').forEach((input) => input.addEventListener('change', () => { shoppingOverrides[input.getAttribute('data-shopping-key')] = Number(input.value || 1); }));
+        shoppingRoot.querySelectorAll('[data-delete-shopping-key]').forEach((button) => button.addEventListener('click', () => {
+          shoppingOverrides[button.getAttribute('data-delete-shopping-key')] = 0;
+          renderMealsAndShopping();
+        }));
+      }
+
+
+      function clearAll() {
+        selectedRecipeIndexes = new Set();
+        selectedVegetableIndexes = new Set();
+        selectedStarchIndexes = new Set();
+        selectedProteinIndexes = new Set();
+        selectedExtraKeys = new Set();
+        builtMeals = [];
+        extraItemsAdded = [];
+        shoppingOverrides = {};
+        platsMode = 'recipes';
+        renderRecipes();
+        renderBuilder();
+        renderExtras();
+        renderMealsAndShopping();
+        updateMealCountBadge();
+      }
+
+      function renderPdf() {
+        const grouped = getGroupedShopping();
+        const mealsHtml = builtMeals.length ? `<div class="print-block"><h2>Liste de repas</h2><ul>${builtMeals.map((meal) => `<li>${meal.title}</li>`).join('')}</ul></div>` : '';
+        const storesHtml = STORE_ORDER.filter((store) => grouped[store]).map((store) => {
+          const zonesHtml = Object.entries(grouped[store]).map(([zone, items]) => `<div class="print-zone"><h4>Zone ${zone}</h4><ul>${items.map((item) => `<li>${item.name} x${item.qty}</li>`).join('')}</ul></div>`).join('');
+          return `<div class="print-store"><h3>${STORE_LABELS[store]}</h3>${zonesHtml}</div>`;
+        }).join('');
+        const printHtml = `<!doctype html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Courses</title><style>body{margin:0;padding:32px;font-family:Helvetica,Arial,sans-serif;color:#111;background:#fff}h1{margin:0 0 24px;font-size:28px;font-weight:500}h2{margin:0 0 12px;font-size:18px;font-weight:500}h3{margin:0 0 12px;font-size:16px;font-weight:500}h4{margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#666}.print-block,.print-store{margin-bottom:24px;padding:16px;border:1px solid #ddd;border-radius:12px}.print-zone+.print-zone{margin-top:16px}ul{margin:0;padding-left:18px}li+li{margin-top:6px}@page{margin:16mm}
+/* Fix image size for recipe cards */
+#recipesList img {
+  width: 100px !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 6px;
+  border-radius: 10px;
 }
 
-renderList("vegetables", DATA.vegetables, "vegetables");
-renderList("starches", DATA.starches, "starches");
-renderList("cheeses", DATA.cheeses, "cheeses");
-renderList("proteins", DATA.proteins, "proteins");
-renderList("sauces", DATA.sauces, "sauces");
+</style></head><body><h1>Courses</h1>${mealsHtml}${storesHtml}<script>window.onload=function(){setTimeout(function(){window.print();},150);};<\/script></body></html>`;
+        const blob = new Blob([printHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }
 
-renderMeals();
+      function handlePlatsAction() {
+        if (platsMode === 'recipes') addRecipeToMeals();
+        else addCustomMeal();
+      }
 
-</script>
+      function setupStickySwitch() {
+        const trigger = document.getElementById('builderTrigger');
+        function syncMode() {
+          const rect = trigger.getBoundingClientRect();
+          platsMode = rect.top <= 120 ? 'builder' : 'recipes';
+          updatePlatsActionButton();
+        }
+        window.addEventListener('scroll', syncMode, { passive: true });
+        window.addEventListener('resize', syncMode);
+        syncMode();
+      }
 
-</body>
+      document.querySelectorAll('.tab-btn').forEach((button) => button.addEventListener('click', () => setTab(button.getAttribute('data-tab'))));
+      document.getElementById('platsActionBtn').addEventListener('click', handlePlatsAction);
+      document.getElementById('addExtraBtn').addEventListener('click', addExtrasToShopping);
+      document.getElementById('generatePdfBtn').addEventListener('click', renderPdf);
+      document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+
+      renderRecipes();
+      renderBuilder();
+      renderExtras();
+      renderMealsAndShopping();
+      updateMealCountBadge();
+      setTab('plats');
+      setupStickySwitch();
+    </script>
+  </body>
 </html>
